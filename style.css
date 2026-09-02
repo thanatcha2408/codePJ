@@ -1,0 +1,237 @@
+:root {
+    --dsi-navy: #0B2240;
+    --dsi-navy-hover: #16365F;
+    --dsi-bg: #f8f9fa;
+}
+body {
+    font-family: 'Prompt', sans-serif;
+    background-color: var(--dsi-bg);
+    color: #2b2b2b;
+}
+/* ส่วนกลางสำหรับปุ่มและฟอร์ม */
+.btn-navy {
+    background-color: var(--dsi-navy);
+    color: #ffffff;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    border: none;
+}
+.btn-navy:hover {
+    background-color: var(--dsi-navy-hover);
+    color: #ffffff;
+}
+.form-control:focus {
+    border-color: var(--dsi-navy);
+    box-shadow: 0 0 0 0.25rem rgba(11, 34, 64, 0.15);
+}
+
+/* สำหรับหน้า Login (login.php) */
+.login-body-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
+}
+.login-header {
+    background-color: var(--dsi-navy);
+    color: #ffffff;
+    padding: 30px 20px;
+    text-align: center;
+}
+.login-header h4 {
+    font-weight: 500;
+    margin: 0;
+}
+.login-header p {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin: 8px 0 0 0;
+}
+.login-body {
+    padding: 30px;
+}
+.dsi-logo-container {
+    margin-bottom: 15px;
+    text-align: center;
+}
+.login-logo-img {
+    height: 90px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+.navbar-logo-img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+}
+
+/* สำหรับหน้า Dashboard (dashboard.php) */
+.navbar-navy {
+    background-color: var(--dsi-navy);
+}
+.navbar-brand-text {
+    font-weight: 500;
+    color: #ffffff !important;
+    letter-spacing: 0.5px;
+}
+.btn-logout {
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+.btn-logout:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: #ffffff;
+}
+.dashboard-container {
+    padding: 30px 15px;
+}
+.table-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    overflow: hidden;
+}
+.table-card-header {
+    background-color: #ffffff;
+    border-bottom: 2px solid #f1f3f5;
+    padding: 20px;
+}
+.table-title {
+    color: var(--dsi-navy);
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+.table-title i {
+    margin-right: 10px;
+}
+.dsi-table {
+    margin-bottom: 0;
+}
+.dsi-table th {
+    background-color: var(--dsi-navy);
+    color: #ffffff;
+    font-weight: 500;
+    text-align: center;
+    vertical-align: middle;
+    border: none;
+    padding: 12px 10px;
+    font-size: 0.9rem;
+}
+.dsi-table td {
+    vertical-align: middle;
+    padding: 12px 10px;
+    font-size: 0.9rem;
+}
+.dsi-table tbody tr:hover {
+    background-color: #f1f4f8;
+}
+.btn-view-statement {
+    background-color: var(--dsi-navy);
+    color: #ffffff;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-view-statement:hover {
+    background-color: var(--dsi-navy-hover);
+    color: #ffffff;
+}
+.search-box {
+    max-width: 300px;
+}
+.modal-header-navy {
+    background-color: var(--dsi-navy);
+    color: #ffffff;
+}
+.modal-header-navy .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+.modal-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+.badge-extracted {
+    background-color: #e9ecef;
+    color: #495057;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 3px;
+}
+.badge-extracted:last-child {
+    margin-bottom: 0;
+}
+.btn-print-case {
+    background-color: var(--dsi-navy);
+    color: #ffffff;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-print-case:hover {
+    background-color: var(--dsi-navy-hover);
+    color: #ffffff;
+}
+
+/* สไตล์สำหรับช่องเลือกไฟล์ตามการเลือกไฟล์ */
+#dsi_file {
+    transition: all 0.3s ease-in-out;
+}
+
+/* กรณีที่ยังไม่เลือกไฟล์ (สีเหลือง) */
+.file-input-pending {
+    border-color: #ffc107 !important;
+    background-color: #fffbeb !important;
+    color: #664d03 !important;
+}
+.file-input-pending::file-selector-button {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    border-color: #ffc107 !important;
+    font-weight: 500;
+}
+.file-input-pending::file-selector-button:hover {
+    background-color: #ffca2c !important;
+    border-color: #ffc720 !important;
+}
+
+/* กรณีที่เลือกไฟล์แล้ว (สีเขียว) */
+.file-input-success {
+    border-color: #198754 !important;
+    background-color: #f1fdf5 !important;
+    color: #0f5132 !important;
+}
+.file-input-success::file-selector-button {
+    background-color: #198754 !important;
+    color: #ffffff !important;
+    border-color: #198754 !important;
+    font-weight: 500;
+}
+.file-input-success::file-selector-button:hover {
+    background-color: #157347 !important;
+    border-color: #146c43 !important;
+}
