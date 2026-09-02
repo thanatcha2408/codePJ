@@ -1,9 +1,9 @@
 <?php
 
-$host = "mysql-dsi-project.alwaysdata.net";
-$user = "dsi-project";
-$pass = "Dsi2026.";
-$db = "dsi-project_db";
+$host = "";
+$user = "";
+$pass = "";
+$db = "";
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
