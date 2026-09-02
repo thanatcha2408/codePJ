@@ -1,12 +1,6 @@
-// dashboard.js
-// JavaScript สำหรับจัดการพฤติกรรมในหน้า Dashboard
-
-// ระบุไฟล์ worker สำหรับ PDF.js
 if (typeof pdfjsLib !== 'undefined') {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 }
-
-// ฟังก์ชันสำหรับสกัดข้อความออกมาจากไฟล์ PDF
 async function getPdfText(file) {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -20,8 +14,6 @@ async function getPdfText(file) {
     }
     return fullText.trim();
 }
-
-// ฟังก์ชันสำหรับสกัดข้อความออกมาจากไฟล์เอกสาร Word (.docx)
 async function getDocxText(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -46,7 +38,6 @@ async function getDocxText(file) {
     });
 }
 
-// ตรวจจับและดักการกดส่งฟอร์มเพื่อประมวลผลไฟล์ PDF และ DOCX ก่อนส่งไปยัง n8n Webhook
 const uploadForm = document.getElementById('uploadForm');
 if (uploadForm) {
     uploadForm.addEventListener('submit', async function (e) {
@@ -59,7 +50,7 @@ if (uploadForm) {
         const isDocx = fileName.endsWith('.docx');
 
         if (isPdf || isDocx) {
-            e.preventDefault(); // ยกเลิกการ Submit แบบปกติไปยัง PHP
+            e.preventDefault();
 
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalBtnHTML = submitBtn.innerHTML;
@@ -74,7 +65,6 @@ if (uploadForm) {
                     extractedText = await getDocxText(file);
                 }
 
-                // ตรวจสอบว่าข้อความไม่ว่างเปล่า
                 if (!extractedText || extractedText.trim() === "") {
                     alert(`ไม่สามารถสกัดข้อความภาษาไทยหรือข้อความใดๆ จากไฟล์ ${isPdf ? 'PDF' : 'Word'} นี้ได้ (ไฟล์อาจเป็นไฟล์ว่างเปล่าหรือเป็นไฟล์ภาพสแกน)`);
                     submitBtn.disabled = false;
@@ -84,7 +74,6 @@ if (uploadForm) {
 
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> กำลังส่งวิเคราะห์...';
 
-                // ส่งต่อไปยัง dashboard.php backend เพื่อให้ส่งต่อ n8n และตรวจสอบผลลัพธ์
                 const formData = new FormData();
                 formData.append('action', 'analyze_text');
                 formData.append('text_content', extractedText);
@@ -98,7 +87,6 @@ if (uploadForm) {
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        // นำทางกลับด้วยพารามิเตอร์ success เพื่อแสดงผลการวิเคราะห์ในหน้าแดชบอร์ด
                         window.location.href = "dashboard.php?upload=success";
                     } else {
                         alert(result.error || "การวิเคราะห์ล้มเหลว");
@@ -120,7 +108,6 @@ if (uploadForm) {
     });
 }
 
-// Script สำหรับการค้นหาคำสำคัญในตารางแบบเรียลไทม์ และปิดกล่องแจ้งเตือนอัติโนมัติ
 const tableSearch = document.getElementById('tableSearch');
 if (tableSearch) {
     tableSearch.addEventListener('keyup', function () {
@@ -128,7 +115,6 @@ if (tableSearch) {
         var rows = document.querySelectorAll('#caseTable tbody tr');
 
         rows.forEach(function (row) {
-            // ข้ามแถวที่แสดงเมื่อไม่พบข้อมูล
             if (row.cells.length === 1 && row.cells[0].colSpan === 8) {
                 return;
             }
@@ -142,8 +128,6 @@ if (tableSearch) {
         });
     });
 }
-
-// ตั้งเวลาปิดกล่องแจ้งเตือนกึ่งกลางหน้าจอ (Alert Center Overlay) อัตโนมัติใน 2 วินาที (2000 มิลลิวินาที)
 setTimeout(function () {
     var alerts = document.querySelectorAll('.center-alert');
     alerts.forEach(function (alert) {
@@ -153,8 +137,6 @@ setTimeout(function () {
         }, 400);
     });
 }, 2000);
-
-// จัดการปุ่มลบคดี พร้อมกล่องยืนยันการลบข้อมูลคดี (ใช้ SweetAlert2)
 function initDeleteButtons() {
     document.querySelectorAll('.btn-delete-case').forEach(button => {
         if (button.dataset.deleteBound) return;
@@ -163,8 +145,6 @@ function initDeleteButtons() {
         button.addEventListener('click', function () {
             const casePk = this.getAttribute('data-case-pk');
             const caseId = this.getAttribute('data-case-id');
-
-            // ตรวจสอบว่ามีไลบรารี SweetAlert2 หรือไม่
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: 'ยืนยันการลบคดี?',
@@ -190,8 +170,6 @@ function initDeleteButtons() {
         });
     });
 }
-
-// ฟังก์ชันสำหรับส่งคำขอลบคดีแบบ AJAX เพื่อไม่ให้เพิ่มประวัติใน History Stack ของเบราว์เซอร์
 async function submitDeleteForm(casePk, caseId) {
     const formData = new FormData();
     formData.append('action', 'delete');
@@ -208,8 +186,6 @@ async function submitDeleteForm(casePk, caseId) {
         if (response.ok) {
             const result = await response.json();
             if (result.success) {
-                // ใช้ location.replace เพื่อแทนที่ประวัติหน้าปัจจุบัน ทำให้เวลาลบแล้วกดย้อนกลับ
-                // จะไม่ย้อนกลับมาเจอประวัติหน้าที่ยังมีข้อมูลคดีนี้ค้างอยู่อีก
                 window.location.replace('dashboard.php?delete=success');
             } else {
                 alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + (result.error || 'ไม่ทราบสาเหตุ'));
@@ -222,8 +198,6 @@ async function submitDeleteForm(casePk, caseId) {
         alert('เกิดข้อผิดพลาดในการส่งคำขอระบบลบคดี');
     }
 }
-
-// ตรวจสอบสถานะการทำงานจาก URL Parameter และใช้ SweetAlert2 แสดงผลความสำเร็จ
 function checkUrlNotifications() {
     if (typeof Swal !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
@@ -235,7 +209,6 @@ function checkUrlNotifications() {
                 timer: 2000,
                 showConfirmButton: false
             });
-            // ลบ query string เพื่อไม่ให้แสดงซ้ำเมื่อกดรีเฟรชหน้าเว็บ
             window.history.replaceState({}, document.title, window.location.pathname);
         } else if (urlParams.has('upload') && urlParams.get('upload') === 'success') {
             Swal.fire({
@@ -268,16 +241,12 @@ function checkUrlNotifications() {
     }
 }
 
-// ฟังก์ชันสำหรับพิมพ์รายงานคดี
 function printCaseReport(casePk) {
     const modal = document.getElementById(`statementModal${casePk}`);
     if (!modal) return;
-
-    // ดึงข้อมูลและแยกวิเคราะห์หัวข้อคดี
     const caseIdLabel = modal.querySelector(`.modal-title`).textContent;
     const parts = caseIdLabel.split('ชื่อคดี:');
     const caseId = parts.length > 1 ? parts[1].trim() : 'คดีความมั่นคง';
-
     const officer = modal.querySelector(`.officer-val`) ? modal.querySelector(`.officer-val`).textContent.trim() : '-';
     const filename = modal.querySelector(`.filename-val`) ? modal.querySelector(`.filename-val`).textContent.trim() : '-';
     const person = modal.querySelector(`.person-val`) ? modal.querySelector(`.person-val`).textContent.trim() : '-';
@@ -502,9 +471,8 @@ function printCaseReport(casePk) {
     printWindow.document.close();
 }
 
-// ผูกการทำงานปุ่มพิมพ์เอกสาร
 function initPrintButtons() {
-    // ปุ่มพิมพ์จากหน้าหลัก (Direct Print)
+
     document.querySelectorAll('.btn-print-case-trigger').forEach(button => {
         if (button.dataset.printBound) return;
         button.dataset.printBound = "true";
@@ -514,7 +482,6 @@ function initPrintButtons() {
         });
     });
 
-    // ปุ่มพิมพ์จากในกล่อง Modal
     document.querySelectorAll('.btn-print-modal-trigger').forEach(button => {
         if (button.dataset.printBound) return;
         button.dataset.printBound = "true";
@@ -525,7 +492,6 @@ function initPrintButtons() {
     });
 }
 
-// จัดการปุ่มแก้ไขชื่อคดี (ใช้ SweetAlert2)
 function initEditButtons() {
     document.querySelectorAll('.btn-edit-case-name').forEach(button => {
         if (button.dataset.editBound) return;
@@ -564,7 +530,6 @@ function initEditButtons() {
     });
 }
 
-// ฟังก์ชันสำหรับส่งคำขอแก้ไขชื่อคดีแบบ AJAX เพื่อไม่ให้เพิ่มประวัติใน History Stack ของเบราว์เซอร์
 async function submitEditForm(casePk, newCaseId) {
     const formData = new FormData();
     formData.append('action', 'edit_case_name');
@@ -596,7 +561,6 @@ async function submitEditForm(casePk, newCaseId) {
     }
 }
 
-// ฟังก์ชันสำหรับสลับสีขอบและปุ่มช่องเลือกไฟล์ตามการทำงาน (ยังไม่เลือก = เหลือง, เลือกแล้ว = เขียว)
 function initFileInputColor() {
     const fileInput = document.getElementById('dsi_file');
     if (fileInput) {
@@ -612,7 +576,6 @@ function initFileInputColor() {
     }
 }
 
-// ผูกเหตุการณ์และตรวจเช็คการแจ้งเตือนทันทีหรือเมื่อ DOM โหลดเสร็จสิ้น
 function init() {
     initDeleteButtons();
     initPrintButtons();
@@ -627,7 +590,6 @@ if (document.readyState === 'loading') {
     init();
 }
 
-// ตรวจจับเมื่อเปิดหน้านี้จากการกดย้อนกลับ (Back Button) ของเบราว์เซอร์ เพื่อให้รีเฟรชหน้าและโหลดข้อมูลล่าสุดจากฐานข้อมูลเสมอ
 window.addEventListener('pageshow', function (event) {
     const historyTraversal = event.persisted || 
                              (typeof window.performance !== 'undefined' && 
