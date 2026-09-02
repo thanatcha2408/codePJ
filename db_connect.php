@@ -1,6 +1,4 @@
 <?php
-// db_connect.php
-// ไฟล์สำหรับเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO
 
 $host = "mysql-dsi-project.alwaysdata.net";
 $user = "dsi-project";
