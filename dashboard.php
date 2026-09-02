@@ -1,14 +1,6 @@
 <?php
-// dashboard.php
-// หน้าแสดงตารางข้อมูลคดีอัจฉริยะ สำหรับพนักงานสอบสวน
-
-// 1. รวมไฟล์ระบบล็อกสิทธิ์การเข้าถึงไว้บนสุดเพื่อความปลอดภัย
 require_once 'auth_check.php';
-
-// 2. เชื่อมต่อฐานข้อมูล
 require_once 'db_connect.php';
-
-// ฟังก์ชันกลางในการส่งข้อมูลไปยัง n8n Webhook และตรวจสอบความสำเร็จในการเชื่อมต่อ
 function analyze_and_verify_n8n($text_content, $file_name, $pdo) {
     $webhook_url = 'https://skilled-kangaroo.pikapod.net/webhook/dsi-file-upload';
     
@@ -42,12 +34,9 @@ function analyze_and_verify_n8n($text_content, $file_name, $pdo) {
     } elseif (empty($response)) {
         return ['success' => false, 'error' => 'ส่งไม่สำเร็จ: ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์ AI ของ n8n'];
     }
-
-    // หากส่งคำขอสำเร็จและ n8n ตอบกลับปกติ (n8n จะทำหน้าที่บันทึกลง MySQL ตามเวิร์กโฟลว์)
     return ['success' => true];
 }
 
-// 3.0.1 จัดการวิเคราะห์ข้อความที่ส่งมาจาก AJAX (สำหรับ PDF)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'analyze_text') {
     header('Content-Type: application/json');
     $text_content = $_POST['text_content'] ?? '';
@@ -65,8 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 $upload_error = '';
 $upload_success = '';
-
-// 3. จัดการอัปโหลดไฟล์คำให้การส่งต่อให้ n8n Webhook
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     $file = $_FILES['file'];
     
@@ -93,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     }
 }
 
-// 3.2 จัดการเพิ่มข้อมูลคดีด้วยตนเอง (Manual Insert)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'insert_manual') {
     $case_id = trim($_POST['case_id'] ?? '');
     $officer_name = trim($_POST['officer_name'] ?? '');
@@ -115,15 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         try {
             $pdo->beginTransaction();
-
-            // ตรวจสอบว่ามี case_id นี้อยู่แล้วหรือไม่เพื่อป้องกันข้อมูลซ้ำ
+            
             $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM cases WHERE case_id = :case_id");
             $stmt_check->execute(['case_id' => $case_id]);
             if ($stmt_check->fetchColumn() > 0) {
                 throw new Exception('มีชื่อคดีนี้ในระบบแล้ว');
             }
 
-            // 1. เพิ่มในตาราง cases
             $stmt_case = $pdo->prepare("INSERT INTO cases (case_id, officer_name, file_name, statement_text) VALUES (:case_id, :officer_name, 'กรอกข้อมูลด้วยตนเอง', :statement_text)");
             $stmt_case->execute([
                 'case_id' => $case_id,
@@ -131,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'statement_text' => $statement_text
             ]);
 
-            // 2. เพิ่มในตาราง extracted_entities
             $stmt_entity = $pdo->prepare("INSERT INTO extracted_entities (case_id, person_name, witness_name, accuser_name, phone_number, bank_name, account_number, nationality, passport_number, vehicle, email, id_card_number) VALUES (:case_id, :person_name, :witness_name, :accuser_name, :phone_number, :bank_name, :account_number, :nationality, :passport_number, :vehicle, :email, :id_card_number)");
             $stmt_entity->execute([
                 'case_id' => $case_id,
@@ -160,7 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// 3.3 จัดการแก้ไขชื่อคดี (Edit Case Name)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_case_name') {
     $case_pk = filter_input(INPUT_POST, 'case_pk', FILTER_VALIDATE_INT);
     $new_case_id = trim($_POST['new_case_id'] ?? '');
@@ -175,28 +157,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         try {
             $pdo->beginTransaction();
-
-            // 1. ดึงชื่อคดีเดิม
             $stmt_select = $pdo->prepare("SELECT case_id FROM cases WHERE id = :case_pk");
             $stmt_select->execute(['case_pk' => $case_pk]);
             $old_case_id = $stmt_select->fetchColumn();
 
             if ($old_case_id) {
-                // 2. ตรวจสอบชื่อคดีใหม่ว่าซ้ำหรือไม่
                 $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM cases WHERE case_id = :new_case_id AND id != :case_pk");
                 $stmt_check->execute(['new_case_id' => $new_case_id, 'case_pk' => $case_pk]);
                 if ($stmt_check->fetchColumn() > 0) {
                     throw new Exception('มีชื่อคดีนี้ในระบบแล้ว');
                 }
-
-                // 3. อัปเดตตาราง extracted_entities
                 $stmt_entity = $pdo->prepare("UPDATE extracted_entities SET case_id = :new_case_id WHERE case_id = :old_case_id");
                 $stmt_entity->execute([
                     'new_case_id' => $new_case_id,
                     'old_case_id' => $old_case_id
                 ]);
-
-                // 4. อัปเดตตาราง cases
                 $stmt_case = $pdo->prepare("UPDATE cases SET case_id = :new_case_id WHERE id = :case_pk");
                 $stmt_case->execute([
                     'new_case_id' => $new_case_id,
@@ -205,7 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 $pdo->commit();
 
-                // ตรวจสอบว่าเป็น AJAX Request หรือไม่
                 if (isset($_POST['ajax'])) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true]);
@@ -236,42 +210,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// 3.1 จัดการลบข้อมูลคดี
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
     $case_pk = filter_input(INPUT_POST, 'case_pk', FILTER_VALIDATE_INT);
 
     if ($case_pk) {
         try {
             $pdo->beginTransaction();
-
-            // ดึงข้อมูล case_id จากฐานข้อมูลโดยตรงเพื่อให้แน่ใจว่าจะใช้ค่าที่ถูกต้องในการลบ
             $stmt_select = $pdo->prepare("SELECT case_id FROM cases WHERE id = :case_pk");
             $stmt_select->execute(['case_pk' => $case_pk]);
             $case = $stmt_select->fetch();
 
             if ($case) {
                 $case_id = $case['case_id'];
-
-                // 1. ลบจากตาราง extracted_entities
                 $stmt1 = $pdo->prepare("DELETE FROM extracted_entities WHERE case_id = :case_id");
                 $stmt1->execute(['case_id' => $case_id]);
-
-                // 1.1 ล้างข้อมูลที่เป็นขยะ 'undefined' หรือค่าว่างในตาราง extracted_entities ด้วยเพื่อป้องกันการตกค้าง
                 $pdo->exec("DELETE FROM extracted_entities WHERE case_id = 'undefined' OR case_id = ''");
-
-                // 2. ลบจากตาราง cases
                 $stmt2 = $pdo->prepare("DELETE FROM cases WHERE id = :case_pk");
                 $stmt2->execute(['case_pk' => $case_pk]);
-
                 $pdo->commit();
-
-                // ตรวจสอบว่าเป็น AJAX Request หรือไม่
                 if (isset($_POST['ajax'])) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true]);
                     exit();
                 }
-
                 header("Location: dashboard.php?delete=success");
                 exit();
             } else {
@@ -302,8 +263,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 }
-
-// ตรวจสอบพารามิเตอร์ success จาก GET
 if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
     $upload_success = 'ส่งไฟล์ให้ AI วิเคราะห์สำเร็จ ระบบอัปเดตและแสดงข้อมูลใหม่ในตารางแล้ว';
 } elseif (isset($_GET['delete']) && $_GET['delete'] === 'success') {
@@ -313,8 +272,6 @@ if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
 } elseif (isset($_GET['edit']) && $_GET['edit'] === 'success') {
     $upload_success = 'แก้ไขชื่อคดีเรียบร้อยแล้ว';
 }
-
-// 4. ดึงข้อมูลคดีที่มีการเชื่อมโยง (JOIN) ข้อมูลของตาราง cases และ extracted_entities ด้วย case_id
 try {
     $sql = "SELECT 
                 c.id AS case_pk, 
@@ -379,8 +336,6 @@ require_once 'header.php';
                 </div>
             <?php endif; ?>
 
-
-            <!-- ฟอร์มสำหรับอัปโหลดไฟล์เอกสารเพื่อส่งวิเคราะห์ -->
             <div class="card table-card mb-4">
                 <div class="table-card-header bg-light">
                     <h5 class="table-title">
@@ -405,8 +360,7 @@ require_once 'header.php';
                     </form>
                 </div>
             </div>
-
-            <!-- ตารางแสดงรายการคดี -->
+            
             <div class="card table-card">
                 <div class="table-card-header d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                     <h5 class="table-title">
