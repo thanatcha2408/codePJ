@@ -1,12 +1,7 @@
 <?php
-// login.php
-// หน้าจอเข้าสู่ระบบระบบตรวจสอบข้อมูลคดีความมั่นคง (DSI)
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// หากผู้ใช้เข้าสู่ระบบอยู่แล้ว ให้ส่งไปที่หน้า dashboard ทันที
 if (isset($_SESSION['username'])) {
     header('Location: dashboard.php');
     exit();
@@ -22,14 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once 'db_connect.php';
 
         try {
-            // ดึงข้อมูลผู้ใช้จากตาราง users
             $stmt = $pdo->prepare('SELECT username, password_hash FROM users WHERE username = :username');
             $stmt->execute(['username' => $username]);
             $user = $stmt->fetch();
 
             $is_valid = false;
-            if ($user) {
-                // ตรวจสอบรหัสผ่าน: รองรับทั้งรูปแบบแฮชความปลอดภัยสูง (bcrypt) และข้อความธรรมดา (Plain Text)
+            if ($user) {)
                 if (password_verify($password, $user['password_hash'])) {
                     $is_valid = true;
                 } elseif ($password === $user['password_hash']) {
@@ -38,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($is_valid) {
-                // เข้าสู่ระบบสำเร็จ เก็บค่าลงใน Session
                 $_SESSION['username'] = $user['username'];
                 header('Location: dashboard.php');
                 exit();
